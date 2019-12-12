@@ -178,6 +178,7 @@ class Experiment:
         args.jr_id = os.environ.get('JOB_ID', 0)
         args.vcd = os.environ.get('CUDA_VISIBLE_DEVICES', 0)
         args.cpu_cores = int(os.environ.get('CPU_COUNT', 32))
+        args.start_time = datetime.utcnow().ctime()
 
         self.args = args
         self._chrono = MultiStageChrono(
@@ -195,7 +196,6 @@ class Experiment:
         if allow_unknown:
             return args, other_args
 
-        self.args['start_time'] = datetime.utcnow().ctime()
         return self.args
 
     def chrono(self):
@@ -273,10 +273,11 @@ def write_report(report, print_report=True):
     bench_name = report.get('name', 'X')
     run_id = report.get('run_id', 'X')
     device_id = report.get('vcd', 'X')
+    passfail = '.' if report.get('completed', True) else '.FAIL.'
     timestamp = datetime.utcnow().strftime(r'%Y%m%d-%H%M%S-%f')
     filename = os.path.join(
         outdir,
-        f'{suite_name}.{bench_name}.R{run_id}.D{device_id}.{timestamp}.json'
+        f'{suite_name}.{bench_name}.R{run_id}.D{device_id}{passfail}{timestamp}.json'
     )
     json_report = json.dumps(
         report, sort_keys=True, indent=4, separators=(',', ': ')

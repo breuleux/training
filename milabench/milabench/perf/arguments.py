@@ -22,6 +22,7 @@ from ..benchutils import arguments as bench_args
 from ..benchutils.versioning import get_file_version
 from ..benchutils.chrono import MultiStageChrono
 
+import datetime
 import hashlib
 import socket
 import os
@@ -351,7 +352,7 @@ def make_report(chrono: MultiStageChrono,
         bench_name = os.environ.get('BENCH_NAME') or 'X'
         run_id = os.environ.get('RUN_ID') or 'X'
         device_id = os.environ.get('CUDA_VISIBLE_DEVICES') or 'X'
-        timestamp = datetime.utcnow().strftime('%Y%m%d-%H%M%S-%f')
+        timestamp = datetime.utcnow().strftime(r'%Y%m%d-%H%M%S-%f')
         filename = os.path.join(
             outdir,
             f'{suite_name}.{bench_name}.R{run_id}.D{device_id}.{timestamp}.json'

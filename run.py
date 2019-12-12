@@ -51,6 +51,7 @@ env['JOB_RUNNER'] = '1'
 env['JOB_FILE'] = opt.jobs.split('/')[-1].split('.')[0]
 env['SUITE_NAME'] = env['JOB_FILE']
 env['OUTPUT_DIRECTORY_2'] = opt.outdir
+os.makedirs(opt.outdir, exist_ok=True)
 
 cgroups = {
     'student': 'cpuset,memory:student',

@@ -22,7 +22,7 @@ from ..benchutils import arguments as bench_args
 from ..benchutils.versioning import get_file_version
 from ..benchutils.chrono import MultiStageChrono
 
-import datetime
+from datetime import datetime
 import hashlib
 import socket
 import os
@@ -195,6 +195,7 @@ class Experiment:
         if allow_unknown:
             return args, other_args
 
+        self.args['start_time'] = datetime.utcnow().ctime()
         return self.args
 
     def chrono(self):
@@ -266,6 +267,27 @@ def parser_base(description=None, **kwargs):
     return parser
 
 
+def write_report(report, print_report=True):
+    outdir = os.environ.get('OUTPUT_DIRECTORY_2')
+    suite_name = report.get('suite', 'X')
+    bench_name = report.get('name', 'X')
+    run_id = report.get('run_id', 'X')
+    device_id = report.get('vcd', 'X')
+    timestamp = datetime.utcnow().strftime(r'%Y%m%d-%H%M%S-%f')
+    filename = os.path.join(
+        outdir,
+        f'{suite_name}.{bench_name}.R{run_id}.D{device_id}.{timestamp}.json'
+    )
+    json_report = json.dumps(
+        report, sort_keys=True, indent=4, separators=(',', ': ')
+    )
+    if print_report:
+        print('-' * 80)
+        print(json_report)
+    with open(filename, 'w') as file:
+        print(json_report, file=file)
+
+
 def make_report(chrono: MultiStageChrono,
                 args: Namespace,
                 version: str,
@@ -313,6 +335,9 @@ def make_report(chrono: MultiStageChrono,
     args['epoch_loss'] = epoch_loss.to_list()
     args['metrics'] = metrics
     args['run_id'] = os.getenv('RUN_ID', 0)
+    args['suite'] = os.getenv('SUITE_NAME', '???')
+    args['end_time'] = datetime.utcnow().ctime()
+    args.setdefault('completed', True)
 
     for excluded in excluded_arguments:
         args.pop(excluded, None)
@@ -340,27 +365,16 @@ def make_report(chrono: MultiStageChrono,
 
         report_dict['train_item'] = train_item
 
-    print('-' * 80)
-    json_report = json.dumps(
-        report_dict, sort_keys=True, indent=4, separators=(',', ': ')
-    )
-    print(json_report)
-
     outdir = os.environ.get('OUTPUT_DIRECTORY_2')
     if outdir is not None:
-        suite_name = os.environ.get('SUITE_NAME') or 'X'
-        bench_name = os.environ.get('BENCH_NAME') or 'X'
-        run_id = os.environ.get('RUN_ID') or 'X'
-        device_id = os.environ.get('CUDA_VISIBLE_DEVICES') or 'X'
-        timestamp = datetime.utcnow().strftime(r'%Y%m%d-%H%M%S-%f')
-        filename = os.path.join(
-            outdir,
-            f'{suite_name}.{bench_name}.R{run_id}.D{device_id}.{timestamp}.json'
-        )
-        with open(filename, 'w') as file:
-            print(json_report, file=file)
+        write_report(report_dict, print_report=True)
 
     else:
+        print('-' * 80)
+        json_report = json.dumps(
+            report_dict, sort_keys=True, indent=4, separators=(',', ': ')
+        )
+        print(json_report)
         if not os.path.exists(filename):
             report_file = open(filename, 'w')
             report_file.write('[')

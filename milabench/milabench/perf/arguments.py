@@ -179,7 +179,11 @@ class Experiment:
         args.cpu_cores = int(os.environ.get('CPU_COUNT', 32))
 
         self.args = args
-        self._chrono = MultiStageChrono(name=self.name, skip_obs=self.skip_obs, sync=get_sync(self.args))
+        self._chrono = MultiStageChrono(
+            name=self.name,
+            skip_obs=self.skip_obs,
+            sync=get_sync(self.args)
+        )
 
         if show:
             print('-' * 80)
@@ -261,7 +265,14 @@ def parser_base(description=None, **kwargs):
     return parser
 
 
-def make_report(chrono: MultiStageChrono, args: Namespace, version: str, batch_loss: RingBuffer, epoch_loss: RingBuffer, metrics, remote_logger, results):
+def make_report(chrono: MultiStageChrono,
+                args: Namespace,
+                version: str,
+                batch_loss: RingBuffer,
+                epoch_loss: RingBuffer,
+                metrics,
+                remote_logger,
+                results):
     if args is not None:
         args = args.__dict__
     else:
@@ -329,18 +340,35 @@ def make_report(chrono: MultiStageChrono, args: Namespace, version: str, batch_l
         report_dict['train_item'] = train_item
 
     print('-' * 80)
-    json_report = json.dumps(report_dict, sort_keys=True, indent=4, separators=(',', ': '))
+    json_report = json.dumps(
+        report_dict, sort_keys=True, indent=4, separators=(',', ': ')
+    )
     print(json_report)
 
-    if not os.path.exists(filename):
-        report_file = open(filename, 'w')
-        report_file.write('[')
-        report_file.close()
+    outdir = os.environ.get('OUTPUT_DIRECTORY_2')
+    if outdir is not None:
+        suite_name = os.environ.get('SUITE_NAME') or 'X'
+        bench_name = os.environ.get('BENCH_NAME') or 'X'
+        run_id = os.environ.get('RUN_ID') or 'X'
+        device_id = os.environ.get('CUDA_VISIBLE_DEVICES') or 'X'
+        timestamp = datetime.utcnow().strftime('%Y%m%d-%H%M%S-%f')
+        filename = os.path.join(
+            outdir,
+            f'{suite_name}.{bench_name}.R{run_id}.D{device_id}.{timestamp}.json'
+        )
+        with open(filename, 'w') as file:
+            print(json_report, file=file)
 
-    report_file = open(filename, 'a')
-    report_file.write(json_report)
-    report_file.write(',')
-    report_file.close()
+    else:
+        if not os.path.exists(filename):
+            report_file = open(filename, 'w')
+            report_file.write('[')
+            report_file.close()
+
+        report_file = open(filename, 'a')
+        report_file.write(json_report)
+        report_file.write(',')
+        report_file.close()
 
     print('-' * 80)
 

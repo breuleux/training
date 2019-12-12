@@ -10,6 +10,8 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--dry', action='store_true', default=False)
+parser.add_argument('--outdir', type=str, default='',
+                    help='output directory for the results')
 parser.add_argument('--jobs', type=str, default='fast.json',
                     help='jobs definition file')
 parser.add_argument('--name', type=str, default=None,
@@ -47,6 +49,8 @@ excluded = set(opt.exclude.split(','))
 env = os.environ
 env['JOB_RUNNER'] = '1'
 env['JOB_FILE'] = opt.jobs.split('/')[-1].split('.')[0]
+env['SUITE_NAME'] = env['JOB_FILE']
+env['OUTPUT_DIRECTORY_2'] = opt.outdir
 
 cgroups = {
     'student': 'cpuset,memory:student',

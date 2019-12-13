@@ -93,7 +93,8 @@ def main():
         if speed is False:
             exp.report(results={
                 'completed': False,
-                'vcd': vcd
+                'vcd': vcd,
+                'train_item': {},
             })
         else:
             speed_up = speed / speed1
@@ -108,8 +109,11 @@ def main():
                     'sd': 0,
                     'unit': '%',
                 },
-                'vcd': vcd
+                'vcd': vcd,
             })
+
+    if any(speed is False for world_size, speed in scaling):
+        sys.exit(1)
 
 
 if __name__ == '__main__':

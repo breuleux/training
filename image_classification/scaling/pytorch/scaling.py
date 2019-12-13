@@ -69,8 +69,6 @@ def main():
 
             rc = launch_distributed(script, args, other_args)
 
-            rcs.append(rc)
-
             if rc == 0:
                 report = json.load(open(f'{tmp}/overall_report.json', 'r'))
                 world_size = report['world_size']
@@ -91,7 +89,7 @@ def main():
     assert world_size1 == 1
 
     for world_size, speed in scaling:
-        vcd = ','.join(range(world_size))
+        vcd = ','.join(map(str, range(world_size)))
         if speed is False:
             exp.report(results={
                 'completed': False,
